@@ -3,7 +3,7 @@
 
 Enhanced version of [Python Simplified's Flask Tutorial](https://www.youtube.com/watch?v=6plVs_ytIH8&list=FLUlfchq2F5t_LmXuw1IXbFA&index=2) with new features.  
 
-![App Screenshot](web.png) <!-- Add this line if you have screenshot -->
+![App Screenshot](screenshots/web.png) <!-- Add this line if you have screenshot -->
 
 ## ✨ My Enhancements  
 - ✅ Added SQLite visitor counter  
