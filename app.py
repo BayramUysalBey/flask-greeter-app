@@ -1,5 +1,7 @@
 import os
-import sqlite3  
+import sqlite3
+import sys
+import gunicorn
 from flask import Flask, render_template, request, flash, g
 
 
@@ -25,6 +27,10 @@ def greet():
     count = db.execute('SELECT count FROM counter WHERE id = 1').fetchone()[0]  
 
     return render_template('index.html', greeting_count=count)  # Pass to template  
+
+if sys.platform == "win32":
+    from gevent import monkey
+    monkey.patch_all()
 	
 
 DATABASE = 'greetings.db'  
