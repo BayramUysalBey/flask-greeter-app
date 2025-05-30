@@ -8,10 +8,18 @@ from flask import Flask, render_template, request, flash, g
 app = Flask(__name__)
 app.secret_key = "jfh_dgkhgjdjf"
 
+@app.route('/')
+def home():
+    return "Flask Greeter is running! Go to /hello"
+
 @app.route("/hello")
 def index():
 	flash("what's your name?")
 	return render_template("index.html")
+
+@app.route('/health')
+def health():
+    return {"status": "OK"}, 200
 
 @app.route('/greet', methods=['POST', 'GET'])  
 def greet():  
