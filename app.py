@@ -1,3 +1,4 @@
+import os
 import sqlite3  
 from flask import Flask, render_template, request, flash, g
 
@@ -42,4 +43,8 @@ def get_db():
 def close_db(exception):  
     db = getattr(g, '_database', None)  
     if db is not None:  
-        db.close()  
+        db.close()
+        
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host='0.0.0.0', port=port)
