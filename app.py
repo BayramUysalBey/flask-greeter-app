@@ -1,9 +1,44 @@
 import os
-import sqlite3
-import sys
-import gunicorn
-from flask import Flask, render_template, request, flash, g
+import psycopg2
+from flask import Flask, render_template, request, flash
 
+# Database configuration
+DB_NAME = os.environ.get("DB_NAME", "greeter")
+DB_USER = os.environ.get("DB_USER", "postgres")
+DB_PASS = os.environ.get("DB_PASS", "password")
+DB_HOST = os.environ.get("DB_HOST", "localhost")
+DB_PORT = os.environ.get("DB_PORT", "5432")
+
+def init_db():
+    """Initializes the database."""
+    try:
+        conn = psycopg2.connect(
+            dbname=DB_NAME, 
+            user=DB_USER, 
+            password=DB_PASS, 
+            host=DB_HOST, 
+            port=DB_PORT
+        )
+        with conn:
+            with conn.cursor() as cur:
+                # Create table with proper constraints
+                cur.execute('''
+                    CREATE TABLE IF NOT EXISTS counter (
+                        id INTEGER PRIMARY KEY,
+                        count INTEGER NOT NULL
+                    )
+                ''')
+                
+                # Check if record exists before inserting (safer approach)
+                cur.execute("SELECT 1 FROM counter WHERE id = 1")
+                if not cur.fetchone():
+                    cur.execute('INSERT INTO counter (id, count) VALUES (1, 0)')
+        conn.close()
+    except Exception as e:
+        print(f"Database initialization error: {str(e)}")
+        raise
+# Initialize database
+init_db()
 
 app = Flask(__name__)
 app.secret_key = "jfh_dgkhgjdjf"
@@ -14,8 +49,8 @@ def home():
 
 @app.route("/hello")
 def index():
-	flash("what's your name?")
-	return render_template("index.html")
+    flash("what's your name?")
+    return render_template("index.html")
 
 @app.route('/health')
 def health():
@@ -25,40 +60,27 @@ def health():
 def greet():  
     name = request.form['name_input']  
     flash(f"Hi {name}, great to see you!")  
+    
+    try:
+        conn = psycopg2.connect(
+            dbname=DB_NAME, 
+            user=DB_USER, 
+            password=DB_PASS, 
+            host=DB_HOST, 
+            port=DB_PORT
+        )
+        with conn:
+            with conn.cursor() as cur:
+                cur.execute('UPDATE counter SET count = count + 1 WHERE id = 1')
+                cur.execute('SELECT count FROM counter WHERE id = 1')
+                count = cur.fetchone()[0]
+        conn.close()
+    except Exception as e:
+        print(f"Database error: {str(e)}")
+        count = 0
+    
+    return render_template('index.html', greeting_count=count)
 
-    # Update counter  
-    db = get_db()  
-    db.execute('UPDATE counter SET count = count + 1 WHERE id = 1')  
-    db.commit()  
-
-    # Get current count  
-    count = db.execute('SELECT count FROM counter WHERE id = 1').fetchone()[0]  
-
-    return render_template('index.html', greeting_count=count)  # Pass to template  
-
-if sys.platform == "win32":
-    from gevent import monkey
-    monkey.patch_all()
-	
-
-DATABASE = 'greetings.db'  
-
-def get_db():  
-    db = getattr(g, '_database', None)  
-    if db is None:  
-        db = g._database = sqlite3.connect(DATABASE)  
-        # Create table if not exists  
-        db.execute('''CREATE TABLE IF NOT EXISTS counter  
-                      (id INTEGER PRIMARY KEY, count INTEGER)''')  
-        db.execute('INSERT OR IGNORE INTO counter (id, count) VALUES (1, 0)')  
-    return db  
-
-@app.teardown_appcontext  
-def close_db(exception):  
-    db = getattr(g, '_database', None)  
-    if db is not None:  
-        db.close()
-        
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
