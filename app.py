@@ -25,28 +25,31 @@ def init_db():
                 cur.execute('''
                     CREATE TABLE IF NOT EXISTS counter (
                         id INTEGER PRIMARY KEY,
-                        count INTEGER NOT NULL
+                        count INTEGER NOT NULL DEFAULT 0
                     )
                 ''')
                 
-                # Check if record exists before inserting (safer approach)
-                cur.execute("SELECT 1 FROM counter WHERE id = 1")
-                if not cur.fetchone():
-                    cur.execute('INSERT INTO counter (id, count) VALUES (1, 0)')
-        conn.close()
+                # Initialize the counter if it doesn't exist
+                cur.execute("""
+                    INSERT INTO counter (id, count) 
+                    VALUES (1, 0)
+                    ON CONFLICT (id) DO NOTHING
+                """)
     except Exception as e:
         print(f"Database initialization error: {str(e)}")
         raise
 # Initialize database
-init_db()
+try:
+    init_db()
+except Exception as e:
+    print(f"Failed to initialize database: {str(e)}")
 
 app = Flask(__name__)
 app.secret_key = "jfh_dgkhgjdjf"
 
 @app.route('/')
-def home():
-    return "Flask Greeter is running! Go to /hello"
-
+# def home():
+#     return "Flask Greeter is running! Go to /hello"
 @app.route("/hello")
 def index():
     flash("what's your name?")
