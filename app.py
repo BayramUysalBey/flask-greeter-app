@@ -3,27 +3,14 @@ import psycopg2
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from flask import Flask, render_template, request, flash
 
-# Build a DSN from DATABASE_URL (Render) or local fallback, and enforce SSL on Render
 def get_db_url():
     url = os.environ.get("DATABASE_URL")
-    if not url:
-        # Local development fallback
-        db_name = os.environ.get("DB_NAME", "greeter")
-        db_user = os.environ.get("DB_USER", "postgres")
-        db_pass = os.environ.get("DB_PASS", "password")
-        db_host = os.environ.get("DB_HOST", "localhost")
-        db_port = os.environ.get("DB_PORT", "5432")
-        url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-    if url.startswith("postgres://"):
+    if url and url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
+    if url and "sslmode" not in url:
+        url += "?sslmode=require"
+    return url
 
-    # Ensure sslmode=require for Render
-    parsed = urlparse(url)
-    query = parse_qs(parsed.query)
-    if "sslmode" not in query:
-        query["sslmode"] = ["require"]
-    new_query = urlencode(query, doseq=True)
-    return urlunparse(parsed._replace(query=new_query))
 
 DB_URL = get_db_url()
 
