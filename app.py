@@ -65,7 +65,8 @@ def health():
 def greet():  
     name = request.form['name_input']  
     flash(f"Hi {name}, great to see you!")    
-	count = 0
+
+    count = 0
     try: 
         conn = psycopg2.connect(DB_URL) 
         with conn: 
