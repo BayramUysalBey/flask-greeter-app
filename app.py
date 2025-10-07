@@ -2,15 +2,23 @@ import os
 import psycopg2
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from flask import Flask, render_template, request, flash
+from dotenv import load_dotenv
 
-def get_db_url():
-    url = os.environ.get("DATABASE_URL")
-    if url and url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql://", 1)
-    if url and "sslmode" not in url:
-        url += "?sslmode=require"
-    return url
+load_dotenv()
 
+def get_db_url(): 
+    url = os.environ.get("DATABASE_URL") 
+    if not url:
+        return "postgresql://postgres:password@localhost:5432/greeter"
+    
+    parsed = urlparse(url)
+    query = parse_qs(parsed.query)
+    
+    if "localhost" not in parsed.netloc:
+        query["sslmode"] = ["require"]
+    
+    new_query = urlencode(query, doseq=True)
+    return urlunparse(parsed._replace(query=new_query))
 
 DB_URL = get_db_url()
 
@@ -20,7 +28,6 @@ def init_db():
         conn = psycopg2.connect(DB_URL)
         with conn:
             with conn.cursor() as cur:
-                # Create table with proper constraints
                 cur.execute(
                     """
                     CREATE TABLE IF NOT EXISTS counter (
@@ -29,7 +36,6 @@ def init_db():
                     )
                     """
                 )
-                # Initialize the counter if it doesn't exist
                 cur.execute(
                     """
                     INSERT INTO counter (id, count)
@@ -42,7 +48,6 @@ def init_db():
         print(f"Database initialization error: {str(e)}")
         raise
 
-# Initialize database
 try:
     init_db()
 except Exception as e:
