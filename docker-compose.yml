@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  
+  web:
+   
+    build: . 
+    
+    
+    command: flask run --host=0.0.0.0 --port 5000
+    
+    
+    ports:
+      - "5000:5000"
+      
+    
+    depends_on:
+      - db
+      
+    
+    volumes:
+      - .:/app
+      
+    
+    environment:
+      
+      - DATABASE_URL=postgresql://postgres:password@db:5432/greeter?sslmode=disable
+      - FLASK_ENV=development
+      
+  
+  db:
+    
+    image: postgres:15-alpine 
+    
+   
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=greeter
+    
+   
+    volumes:
+      - postgres_data:/var/lib/postgresql/data 
+
+
+volumes:
+  postgres_data:

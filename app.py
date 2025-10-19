@@ -9,13 +9,13 @@ load_dotenv()
 def get_db_url(): 
     url = os.environ.get("DATABASE_URL") 
     if not url:
-        return "postgresql://postgres:password@localhost:5432/greeter"
+        return "db"
     
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
     
-    if "localhost" not in parsed.netloc:
-        query["sslmode"] = ["require"]
+    # if "localhost" not in parsed.netloc:
+    #     query["sslmode"] = ["require"]
     
     new_query = urlencode(query, doseq=True)
     return urlunparse(parsed._replace(query=new_query))
@@ -43,7 +43,7 @@ def init_db():
                     ON CONFLICT (id) DO NOTHING
                     """
                 )
-        conn.close()
+        conn.commit()
     except Exception as e:
         print(f"Database initialization error: {str(e)}")
         raise
@@ -52,6 +52,8 @@ try:
     init_db()
 except Exception as e:
     print(f"Failed to initialize database: {str(e)}")
+    
+	
 
 app = Flask(__name__)
 app.secret_key = "jfh_dgkhgjdjf"
