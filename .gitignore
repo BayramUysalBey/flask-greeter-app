@@ -1,15 +1,2 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-
-# Databases
-*.db
-*.sqlite3
-
-# Log files
-*.log
-
-# Temporary files
-jules-scratch/
-venv/
 .env
+venv/
