@@ -11,7 +11,7 @@ load_dotenv()
 def get_db_url(): 
     url = os.environ.get("DATABASE_URL") 
     if not url:
-        return "postgresql://postgres:password@db:5432/greeter?sslmode=disable"
+        raise ValueError("DATABASE_URL environment variable is not set!")
     
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
