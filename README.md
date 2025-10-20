@@ -1,30 +1,27 @@
-# Flask Greeting App with Visitor Counter  
+# Flask Greeter App (Containerized Demo)
 
-Live Demo 🚀 (<https://flask-greeter-app-f7hw.onrender.com/hello>) | [![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+This is a simple Flask application that serves as a demonstration of production-ready architecture.
 
-Enhanced version of [Python Simplified's Flask Tutorial](https://www.youtube.com/watch?v=6plVs_ytIH8&list=FLUlfchq2F5t_LmXuw1IXbFA&index=2) with new features.  
+## Features
 
-![App Screenshot](screenshots/web.png) <!-- Add this line if you have screenshot -->
+- Fully containerized with Docker Compose.
+- Persists data using PostgreSQL.
+- Uses Gunicorn for production server emulation.
 
-## ✨ My Enhancements  
+## Requirements
 
-- ✅ Added SQLite visitor counter  
-- ✅ Fixed CSS alignment issues from tutorial  
-- ✅ Improved form validation  
-- ✅ Deployed to Render for production readiness
-  
-🛠 Built With
-Python/Flask
+- Docker Desktop (running)
 
-PostgreSQL
+## Setup and Run (One Command)
 
-HTML/CSS
+1. **Clone the repository:**
+   `git clone [your-repo-url]`
 
-📚 Tutorial Credit
-Original tutorial by Python Simplified.
+2. **Create the Secret File:**
+   Copy the provided `.env.example` file to `.env` and fill in the POSTGRES_PASSWORD.
+   **(We will create the .env.example next).**
 
-## 🚀 Run Locally  
+3. **Build and Launch the Stack:**
+   `docker compose up --build`
 
-```bash  
-pip install -r requirements.txt  
-flask run  
+The application will be available at <http://localhost:5000>.

@@ -1,5 +1,7 @@
 import os
 import psycopg2
+import socket
+import time
 from urllib.parse import urlparse, urlunparse, parse_qs, urlencode
 from flask import Flask, render_template, request, flash
 from dotenv import load_dotenv
@@ -9,49 +11,62 @@ load_dotenv()
 def get_db_url(): 
     url = os.environ.get("DATABASE_URL") 
     if not url:
-        return "db"
+        return "postgresql://postgres:password@db:5432/greeter?sslmode=disable"
     
     parsed = urlparse(url)
     query = parse_qs(parsed.query)
     
-    # if "localhost" not in parsed.netloc:
-    #     query["sslmode"] = ["require"]
+    if 'sslmode' in query:
+        query.pop('sslmode')
     
     new_query = urlencode(query, doseq=True)
     return urlunparse(parsed._replace(query=new_query))
 
 DB_URL = get_db_url()
 
-def init_db():
-    """Initializes the database."""
-    try:
-        conn = psycopg2.connect(DB_URL)
-        with conn:
-            with conn.cursor() as cur:
-                cur.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS counter (
-                        id INTEGER PRIMARY KEY,
-                        count INTEGER NOT NULL DEFAULT 0
-                    )
-                    """
-                )
-                cur.execute(
-                    """
-                    INSERT INTO counter (id, count)
-                    VALUES (1, 0)
-                    ON CONFLICT (id) DO NOTHING
-                    """
-                )
-        conn.commit()
-    except Exception as e:
-        print(f"Database initialization error: {str(e)}")
-        raise
+def create_tables():
+    """
+    Attempts to connect to the database and create the 'counter' table.
+    Includes retry logic to wait for the PostgreSQL container to start.
+    """
+    max_retries = 10
+    retry_delay = 3
+    
+    print("Attempting to initialize database tables...")
 
-try:
-    init_db()
-except Exception as e:
-    print(f"Failed to initialize database: {str(e)}")
+    for i in range(max_retries):
+        try:
+            conn = psycopg2.connect(DB_URL)
+            with conn:
+                with conn.cursor() as cur:
+                    cur.execute(
+                        """
+                        CREATE TABLE IF NOT EXISTS counter (
+                            id INTEGER PRIMARY KEY,
+                            count INTEGER NOT NULL DEFAULT 0
+                        )
+                        """
+                    )
+                    cur.execute(
+                        """
+                        INSERT INTO counter (id, count)
+                        VALUES (1, 0)
+                        ON CONFLICT (id) DO NOTHING
+                        """
+                    )
+                conn.commit()
+            print("Database initialization successful!")
+            return
+            
+        except psycopg2.OperationalError as e:
+            print(f"Database not ready. Retrying in {retry_delay}s... (Attempt {i+1}/{max_retries})")
+            time.sleep(retry_delay)
+        except Exception as e:
+            print(f"FATAL DATABASE ERROR (Check .env file): {str(e)}")
+            raise
+
+    print("FATAL: Failed to initialize database after multiple retries.")
+    raise Exception("Database connection failed.")
     
 	
 
